@@ -1,0 +1,158 @@
+networks:
+  atendimento-net:
+    name: atendimento-net
+    driver: bridge
+
+volumes:
+  n8n-data:
+  ollama-data:
+  whisper-models:
+  pgdata:
+  tts-cache:
+  wiki-data:
+  evolution_store:
+  evolution_instances:
+  evolution-audio: 
+  redis-data:
+
+
+services:
+  atendimento-core:
+    image: n8nio/n8n
+    container_name: atendimento-n8n
+    ports: ["5678:5678"]
+    networks: [atendimento-net]
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./tmp/news:/tmp/news
+    env_file: .env
+    depends_on:
+      - postgree
+      - llm-ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  llm-ollama:
+    image: ollama/ollama
+    container_name: atendimento-Ollama
+    ports: ["11434:11434"]
+    networks: [atendimento-net]
+    volumes:
+      - ollama-data:/models
+      - ollama-data:/root/.ollama
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+
+  whisper:
+    build: ./build/whisper
+    container_name: atendimento-STT
+    ports: ["9000:9000"]
+    networks: [atendimento-net]
+    volumes:
+      - whisper-models:/models
+    env_file: .env
+    environment:
+      WHISPER_MODEL: large-v3
+      WHISPER_LANGUAGE: pt
+      WHISPER_DEVICE: cpu
+      WHISPER_COMPUTE_TYPE: int8 
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+
+  tts:
+    build: ./build/tts
+    container_name: atendimento-TTS
+    ports: ["5000:5000"]
+    networks: [atendimento-net]
+    volumes:
+      - tts-cache:/root/.local/share/tts
+    env_file: .env
+    environment:
+      MODEL_NAME: tts_models/multilingual/multi-dataset/xtts_v2
+      USE_CUDA: "false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+
+  postgree:
+    image: postgres:16
+    container_name: atendimento-DB
+    ports: ["5432:5432"]
+    networks: [atendimento-net]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  evolution-api:
+    image: atendai/evolution-api
+    container_name: atendimento-EvolutionAPI
+    ports:
+      - "8085:8080"
+    networks:
+      - atendimento-net
+    volumes:
+      - evolution-audio:/app/audios
+      - evolution_store:/evolution/store
+      - evolution_instances:/evolution/instances
+    environment:
+      - LICENSE_KEY=${EVOLUTION_LICENSE_KEY}
+      - INTERFACE=all
+      - WEBHOOK_URL_EVO=${WEBHOOK_URL_EVO}
+
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgree:5432/${POSTGRES_DB}?schema=public
+      - DATABASE_CONNECTION_CLIENT_NAME=atendimentoEvolutionClient
+
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379/0
+      - CACHE_REDIS_PREFIX_KEY=evolution
+      - CACHE_LOCAL_ENABLED=false
+
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  redis:
+      image: redis:7
+      container_name: atendimento-redis
+      networks:
+        - atendimento-net
+      ports:
+        - '6379:6379'
+      volumes:
+        - redis-data:/data
+
