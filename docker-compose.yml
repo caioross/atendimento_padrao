@@ -9,7 +9,6 @@ volumes:
   whisper-models:
   pgdata:
   tts-cache:
-  wiki-data:
   evolution_store:
   evolution_instances:
   evolution-audio: 
