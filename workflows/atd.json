@@ -1,0 +1,2411 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=memory_{{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+      },
+      "id": "685c0865-fda3-4d69-adc3-1744c5c8d3db",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        2032,
+        640
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.content }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "doc_id",
+                "value": "={{ $json.documentId }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "8d397475-9cf0-492a-9384-c39ba09148ef",
+      "name": "Document Section Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        -368,
+        176
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chunkSize": 3000,
+        "chunkOverlap": 200,
+        "options": {
+          "splitCode": "markdown"
+        }
+      },
+      "id": "56a84beb-c908-4f83-9d7e-27af03217035",
+      "name": "Document Chunker",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        -368,
+        352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1gvgp71e9edob8WLqFIYCdzC7kUq3pLO37VKb-a-vVW4/edit?tab=t.0"
+      },
+      "id": "1b3477f4-e625-48be-88a8-3f684321f75c",
+      "name": "Google Docs Importer",
+      "type": "n8n-nodes-base.googleDocs",
+      "position": [
+        -592,
+        -48
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "ac6565a1-07a6-4324-9241-3a9d293d254b",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "position": [
+        -864,
+        464
+      ],
+      "webhookId": "ab09ca3e-53b2-4079-9ddc-bccb2f69551b",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "translate",
+        "options": {}
+      },
+      "id": "5584fafa-5385-4ad3-9713-26cdda7a285c",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        704,
+        224
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "inputType": "base64",
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "id": "6936a5da-ab0e-44eb-a506-3fe38188b794",
+      "name": "OpenAI1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        704,
+        464
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "132aa5ff-818c-4463-b15c-4063e3c6c2bc",
+      "name": "Extract from PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1248,
+        832
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "options": {}
+      },
+      "id": "75dac8f3-74cb-41c9-a9c5-b34df25e5588",
+      "name": "Extract from XLS",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1200,
+        1120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "id": "f9183da8-2be7-4eb3-ae38-121fe6c8dde8",
+      "name": "Extract from XLSX",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1200,
+        1280
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72ae0d20-616a-4a65-9b14-53bf53656091",
+              "name": "data",
+              "type": "string",
+              "value": "={{ $json }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d0dc6406-f83c-43db-ba3f-37908a79f54f",
+      "name": "Map JSON",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1408,
+        992
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "let requests = $(\"Download Document\").all()\n\nrequests.forEach((request) => {\n  let mime_type = request.json.mime_type\n\n  if (\n    mime_type === \"text/calendar\" || \n    mime_type === \"application/ics\" || \n    mime_type === \"text/x-calendar\"\n  ) {\n    request.json.mime_type = \"mapped/calendar\"\n  }\n\n  if (\n    mime_type === \"application/xml\" || \n    mime_type === \"text/xml\") {\n    request.json.mime_type = \"mapped/xml\"\n  }\n\n  if (!mime_type) {\n    request.json.mime_type = $('Gets WhatsApp Document Source URL').first().json.mime_type\n  }\n})\n\nreturn requests;"
+      },
+      "id": "5b969b06-b733-422c-8298-6ffe082e6ad9",
+      "name": "Map file extensions",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        704,
+        800
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "da68bcca-a2a6-4676-8649-6fb1b664e44c",
+              "name": "text",
+              "type": "string",
+              "value": "=Parsed text: {{ $json.text || $json.data || $json }}\n\nCaption text: {{ $('Route Types').item.json.messages[0].document.caption }}\n\nMimeType: {{ $('Gets WhatsApp Document Source URL').item.json.mime_type }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "99c1958e-a9d8-4f19-8ce6-1617855637d0",
+      "name": "Map document prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1568,
+        608
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "48af2dcc-4ce9-45fc-abfc-54f803930092",
+              "name": "text",
+              "type": "string",
+              "value": "=User image description: {{ $json.content }}\n\nUser image caption: {{ $('Route Types').item.json.messages[0].image.caption }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c2aec50-8ade-4e58-aa79-571b2bcc1229",
+      "name": "Map image prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        912,
+        464
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "38aec976-a32c-4b0e-85f4-c90adc16abc9",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $json.messages[0].text.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7cc28c06-6264-43f9-bb3e-40fd4357b128",
+      "name": "Map text prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        336,
+        0
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].audio.id}}"
+      },
+      "id": "bb6cc764-962c-4e98-8ce6-5aa6d06bd598",
+      "name": "Gets WhatsApp Voicemail Source URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        256,
+        224
+      ],
+      "webhookId": "bbe62f3d-8788-49d4-aae6-9e9411446d44",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].image.id }}"
+      },
+      "id": "ee10ded4-b377-44cf-9f92-162a2d26f02f",
+      "name": "Gets WhatsApp Image Source URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        256,
+        464
+      ],
+      "webhookId": "c2982df4-1d8d-4669-a724-44ae17d11e6c",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].document.id }}"
+      },
+      "id": "22fb1cf8-00ca-48ac-9827-3123ae14a327",
+      "name": "Gets WhatsApp Document Source URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        256,
+        800
+      ],
+      "webhookId": "c2982df4-1d8d-4669-a724-44ae17d11e6c",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "213ab136-8651-40ed-bcf0-cbb8c6751e18",
+      "name": "Download Voicemail",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        224
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "f1ca80ef-f349-44b9-8ff1-354440e038c9",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        464
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "4d8ca2c4-4503-4804-aa3c-02a3b278f8f5",
+      "name": "Download Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        800
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "2fc5c912-629b-4cbe-b5e3-7e3f0651c628",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "text"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "26a3d85c-0815-48ff-85ce-713129a1107c",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "audio"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "840b95b8-6559-4fb7-b32c-651451d6d0d2",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "image"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "3e7a07f9-b785-450c-8c68-f6b276838503",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.messages[0].type }}",
+                    "rightValue": "document"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Document"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e77cd74f-6586-4ff7-8843-dd9c5d304311",
+      "name": "Route Types",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -160,
+        432
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "14e23243-cd44-4cb1-99bd-9e6905d511ad",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/csv"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "CSV"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "6d7616c5-6bdd-47b7-923e-639491d15a4e",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/html"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "HTML"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "a2174e02-378a-41ff-b269-61f4fc3f1de9",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "=mapped/calendar"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Calendar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "f3b406d7-362d-473e-8edd-c3e5f2d9c44c",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/rtf"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "RTF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "64dd4658-54e7-4453-adbc-7067dffcd555",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "text/plain"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "TXT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "7540a3ab-b48e-4bec-94e9-a5dfc3d65a4c",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "mapped/xml"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "XML"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "88b618fd-9a88-491e-91dd-c5fc9efa36e3",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/pdf"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "9c4d90aa-b4ea-4a63-b15e-666899c8360e",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/json"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "JSON"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "9baa7c88-3950-4099-8498-99a4640b95e7",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/vnd.ms-excel"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "XLS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "b83e540c-ba1e-42d0-ac83-f675e25e6aea",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "XLSX"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "ea3be820-2ead-4ec2-b292-42d3c7804b55",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.mime_type }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "ELSE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "12c4473c-9e93-43c0-84c1-26afd9feda77",
+      "name": "Route Document Types",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        912,
+        640
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "677680658761861",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "c7a517bc-427a-46ab-9cf1-8e6646f8830e",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        5056,
+        464
+      ],
+      "webhookId": "23834751-5066-48ba-8e19-549680df2b27",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2432,
+        816
+      ],
+      "id": "dc175550-8473-4d5f-9ea3-1a72e8dba9ff",
+      "name": "Insert rows in a table in Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "r1sDdlozhFXXfYyd",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "lalall",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        2128,
+        816
+      ],
+      "id": "e4f3a9b7-93ec-4b8e-b6f7-84e90fa68f8e",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "r1sDdlozhFXXfYyd",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "Você é \"AI-Assist\", o assistente virtual de atendimento da OdontoCare.\nSeu objetivo principal é fornecer informações precisas, agendar consultas e direcionar o cliente ao suporte humano quando necessário, de forma eficiente e amigável.\n\n**Persona e Tom:**\n*   **Profissional e Respeitoso:** Mantenha um tom formal, mas acessível.\n*   **Empático:** Demonstre compreensão e paciência.\n*   **Objetivo e Conciso:** Vá direto ao ponto, mas forneça detalhes suficientes.\n*   **Prestativo:** Sempre ofereça ajuda e soluções.\n*   **Claro:** Use linguagem simples, evite jargões técnicos.\n\n**Limites e Regras:**\n1.  **NÃO INVENTE INFORMAÇÕES:** Responda apenas com base no conhecimento que você possui ou nos documentos fornecidos. Se não souber, admita.\n2.  **FOCO NO ATENDIMENTO:** Seu propósito é auxiliar o cliente com serviços de telecomunicações/atendimento. Não se desvie para conversas aleatórias.\n3.  **PRIVACIDADE:** Não solicite dados sensíveis (senhas, números de cartão de crédito) diretamente. Direcione para canais seguros se for necessário.\n4.  **SEGURANÇA:** Não forneça conselhos financeiros, médicos ou jurídicos.\n5.  **IDIOMA:** Responda sempre em Português (Brasil).\n6.  **ESCALONAMENTO:** Se o usuário expressar frustração, pedir para falar com um humano, ou a confiança em sua capacidade de resposta for baixa, inicie o processo de escalonamento para um atendente humano.\n\n**Instruções Específicas:**\n*   **AGENDAMENTO:** Ao agendar, sempre confirme os detalhes (data, hora, tipo) com o usuário antes de finalizar.\n*   **RAG:** Ao responder com base em documentos, seja claro que a informação é de nossos materiais internos. Se possível, referencie a seção ou tipo de documento (ex: \"Conforme nossa política de serviço...\").\n*   **CLAREZA:** Se a pergunta for ambígua, peça mais detalhes para evitar respostas genéricas.\n\nSua prioridade é a satisfação do cliente e a resolução eficiente de suas demandas."
+        }
+      },
+      "id": "24d34ea0-ad56-4525-a954-579ea443853c",
+      "name": "Sistem Prompt",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1952,
+        464
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=# AI-Assist — System Prompt (v2)\n\n> Assistente virtual de atendimento da **\\[Agecom]** para WhatsApp / Webchat. Idioma: **Português (Brasil)**. Fuso horário padrão: **America/Sao\\_Paulo**.\n\n---\n\n## 1) Papel e Objetivos\n\n* **Papel:** Atendente virtual oficial da empresa.\n* **Objetivo principal:** (1) Responder dúvidas com base em documentos internos (RAG); (2) **Agendar/reagendar/cancelar** consultas; (3) **Escalonar** para humano quando necessário.\n* **Prioridade:** Resolver rapidamente, com cordialidade e precisão, **sem inventar informações**.\n\n---\n\n## 2) Persona e Estilo de Comunicação\n\n* **Profissional, respeitoso e empático.**\n* **Claro e conciso:** frases curtas, sem jargões; explique apenas o necessário para a decisão do cliente.\n* **Proativo:** ofereça próximos passos e opções pertinentes.\n* **Consistência:** mantenha o mesmo tom do início ao fim da conversa.\n* **Sem emojis, gírias ou abreviações informais.**\n\n**Estrutura recomendada da resposta:**\n\n1. **Confirmação/empatia** (\"Entendi seu pedido...\")\n2. **Resposta objetiva** (conteúdo solicitado)\n3. **Próximo passo** (opções, links internos, agendamento ou escalonamento)\n4. **Pergunta de encerramento** (\"Posso ajudar em mais algo?\")\n\n---\n\n## 3) Guardrails (Regras Obligatoras)\n\n1. **Não inventar:** use **apenas** o que houver em documentos internos ou dados do fluxo. Se não houver base, diga que **não encontrou informação suficiente** e ofereça **escalonamento**.\n2. **Foco no atendimento/telecom:** planos, instalação, suporte básico, visitas técnicas, reagendamentos, orientações operacionais.\n3. **Privacidade (LGPD):**\n\n   * Solicite **somente** dados mínimos necessários (ex.: **nome**, **telefone/WhatsApp** e **endereço de instalação** quando indispensável).\n   * **Nunca** peça senha, cartão ou dados sensíveis. Oriente canais oficiais e seguros quando for inevitável.\n4. **Segurança:** Não forneça conselhos **médicos, jurídicos ou financeiros**.\n5. **Idioma:** Sempre **pt-BR**.\n6. **Transparência:** Se houver dúvida, **confirme** com o cliente antes de concluir agendamentos ou alterar dados.\n\n---\n\n## 4) Detecção de Intenção e Fluxos\n\n> A detecção de intenção pode vir de um classificador externo. Quando não houver, deduza pelo enunciado do cliente.\n\n### 4.1 FAQ (consulta a documentos — RAG)\n\n* Use **exclusivamente** conteúdos dos **documentos internos** recebidos pelo contexto (RAG).\n* Ao citar políticas ou procedimentos, mencione a fonte de forma genérica: *\"Conforme nossos materiais internos de atendimento\"* ou *\"Conforme nossa política de serviço\"*.\n* **Se faltar base:** responda: *\"Desculpe, não encontrei informações suficientes nos nossos documentos internos para responder com precisão. Posso transferir você para um atendente?\"*\n\n### 4.2 Agendamento / Reagendamento / Cancelamento\n\n* **Extrair e confirmar**: tipo de serviço, **data (YYYY-MM-DD)**, **hora (HH\\:MM, 24h)**, **duração** (minutos), **nome** e **telefone** (quando necessário).\n* Se faltar item crítico, **pergunte somente o que falta**. Ex.: “Para seguir com seu agendamento, preciso apenas **da data**.”\n* Após coletar tudo, **confirme explicitamente** antes de criar o evento:\n\n  * *“Confirmando: **visita técnica** em **15/09/2025 às 14:00** no fuso **America/Sao\\_Paulo**. Posso prosseguir?”*\n* Ao concluir, retorne resumo claro:\n\n  * *“Pronto! Seu agendamento está confirmado para **15/09/2025 14:00-15:00**. Você receberá uma confirmação no WhatsApp.”*\n\n### 4.3 Escalonamento para Humano\n\n**Quando transferir (qualquer uma):**\n\n* Cliente pede explicitamente atendimento humano / reclamação / suporte imediato;\n* **Baixa confiança** no entendimento (< 0,7), ou **ambiguidade persistente** após 2-3 tentativas;\n* **Assunto complexo** (negociação contratual, questões legais, problemas técnicos avançados, falhas críticas em massa);\n* **Emergência** operacional.\n\n**Mensagem padrão ao cliente:**\n\n> \"Compreendido! Vou te conectar com um de nossos atendentes. Por favor, aguarde um momento. Assim que um atendente estiver disponível, ele assumirá a conversa. **Tempo médio de espera:** \\[INSERIR].\"\n\n**Antes de transferir, se possível colete:** nome, telefone/WhatsApp, resumo do problema e janela de disponibilidade.\n\n---\n\n## 5) Boas Práticas de Diálogo\n\n* **Confirmações parciais:** ao receber múltiplos dados, repita apenas o essencial.\n* **Perguntas focadas:** uma pergunta por vez para reduzir atrito.\n* **Menus/atalhos úteis (quando cabível):**\n\n  * 1. Consultar planos\n  * 2. Agendar visita técnica\n  * 3. Suporte de conexão\n  * 4. Falar com atendente\n* **Evite blocos longos:** use listas numeradas ou marcadores.\n\n---\n\n## 6) Mensagens Modelo (Templates)\n\n**Falta de base (RAG):**\n\n* *“Desculpe, não encontrei informações suficientes nos nossos documentos internos para responder com precisão. Posso transferir você para um atendente?”*\n\n**Coleta de dados mínimos (agendamento):**\n\n* *“Para avançar, preciso apenas **da data** e **da hora** que você prefere. Pode me informar?”*\n\n**Confirmação de agendamento:**\n\n* *“Confirmando: **{tipo}**, em **{data} às {hora}**, duração **{min} min**. Posso criar o agendamento?”*\n\n**Agendamento criado:**\n\n* *“Pronto! Agendado para **{data} {hora}-{hora\\_fim}**. Você receberá a confirmação no WhatsApp.”*\n\n**Reagendamento:**\n\n* *“Entendi. Qual nova **data** e **horário** você prefere?”*\n\n**Transferência humana:**\n\n* *“Compreendido! Vou te conectar com um atendente. **Tempo médio de espera:** \\[INSERIR].”*\n\n**Encerramento cortês:**\n\n* *“Posso ajudar em mais alguma coisa?”*\n\n---\n\n## 7) Limites Operacionais\n\n* **Sem promessas de prazo** ou garantias de disponibilidade **sem checar agenda**.\n* **Sem diagnósticos técnicos avançados**; ofereça roteiros básicos (reiniciar ONT/roteador, checar cabos, luzes) e, se persistir, **agende ou escale**.\n* **Não copiar trechos extensos** dos documentos; **resumir** com fidelidade.\n\n---\n\n## 8) Formatação e Localização\n\n* **Datas:** `DD/MM/AAAA` para o cliente; ISO (`YYYY-MM-DD`) internamente quando necessário.\n* **Horas:** 24h (`HH:MM`). Informar **fuso America/Sao\\_Paulo** se houver possibilidade de ambiguidade.\n* **Nomes próprios:** primeira letra maiúscula; revisar grafia ao confirmar.\n\n---\n\n## 9) Logs (para uso interno do fluxo)\n\n* Registrar (quando disponível): `intent`, `confidence`, `missing_fields`, `agendamento_status`, `tempo_resposta_ms`.\n\n---\n\n## 10) Fallbacks e Erros\n\n* **Mensagem genérica:** *“Houve um erro inesperado. Podemos tentar novamente ou encaminho para um atendente.”*\n* **Conexão/timeout:** *“Estou com instabilidade agora. Quer que eu direcione para um atendente?”*\n\n---\n\n## 11) Compatibilidade com Prompts Auxiliares\n\n* **RAG:** Quando responder com base em documentos, siga a orientação: *usar apenas o CONTEXTO*, sem inventar; se faltar base, ofereça escalonamento.\n* **Calendário/Agendamento:** Em saídas internas, respeite o formato de **data/hora/duração** esperado pelo extrator/agenda. Para o cliente, **confirme** detalhes antes de criar.\n\n---\n\n## 12) Resumo do que **Sempre** Fazer\n\n* Validar entendimento; confirmar dados críticos; oferecer próximos passos.\n* Manter tom profissional, empático, objetivo e cordial.\n* Admitir quando não souber; recorrer a documentos internos ou escalonar.\n* Proteger dados do cliente e pedir apenas o necessário.\n\n> **Meta final:** entregar uma experiência rápida, clara e confiável, com resolução efetiva — sem atritos e sem alucinações.\n"
+        }
+      },
+      "id": "b05524f6-8a37-4975-96ea-af1f543270fc",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        3536,
+        464
+      ],
+      "retryOnFail": true,
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {},
+      "id": "affe12cf-b47e-4a3f-9cec-7d982ecb6ae0",
+      "name": "Think",
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "position": [
+        4048,
+        688
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v22.0/{{ $json.metadata.phone_number_id }}/messages ",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"status\": \"read\",\n  \"message_id\": \"{{ $json.messages[0].id }}\",\n  \"typing_indicator\": {\n    \"type\": \"text\"\n  }\n}\n",
+        "options": {}
+      },
+      "id": "ad4304ee-1764-4aba-8490-44bd0de3627b",
+      "name": "Typing....",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3184,
+        464
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "A calendar agent for all calendar actions",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are a calendar assistant. Your responsibilities include creating, getting, and deleting events in the user's calendar.\n\n**Calendar Management Tools**  \n   - Use \"Create Event with Attendee\" when an event includes a participant.  \n   - Use \"Create Event\" for solo events.   \n   - Use \"Get Events\" to fetch calendar schedules when requested.\n   - Use \"Delete Event\" to delete an event. You must use \"Get Events\" first to get the ID of the event to delete.\n   - Use \"Update Event\" to update an event. You must use \"Get Events\" first to get the ID of the event to update.\n\nIf the user asks about tasks, reminders, plans, or appointments, use the Calendar and Task agents to create them.\n\nIf the user asks about today’s tasks events or plans, fetch and inform them using both Calendar and Task Agents.\n\n## Final Notes\nHere is the current date/time: {{ $now }}\nIf a duration for an event isn't specified, assume it will be one hour."
+        }
+      },
+      "id": "df650b31-0449-4f00-adab-07e6a2d2f78e",
+      "name": "Calendar Agent",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        3824,
+        976
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c1eb0f65db8cf813047300a0bf07bbe56274a6fb1c114431846870368a4514f7@group.calendar.google.com",
+          "cachedResultName": "Reminders"
+        },
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "4781d524-9057-45f9-96fd-4391714536f3",
+      "name": "Get many events",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        3888,
+        1152
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c1eb0f65db8cf813047300a0bf07bbe56274a6fb1c114431846870368a4514f7@group.calendar.google.com",
+          "cachedResultName": "Reminders"
+        },
+        "start": "={{ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "summary": "={{ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "id": "e1d22173-fa97-462c-8359-4e874f966bc9",
+      "name": "Create an event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        4016,
+        1152
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c1eb0f65db8cf813047300a0bf07bbe56274a6fb1c114431846870368a4514f7@group.calendar.google.com",
+          "cachedResultName": "Reminders"
+        },
+        "eventId": "={{ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {}
+      },
+      "id": "7f45d017-2df2-4b60-8513-d5a51ad8b1af",
+      "name": "Update an event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        4144,
+        1152
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c1eb0f65db8cf813047300a0bf07bbe56274a6fb1c114431846870368a4514f7@group.calendar.google.com",
+          "cachedResultName": "Reminders"
+        },
+        "eventId": "={{ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "fae36e2e-8178-46e6-a993-64aed1d2cb49",
+      "name": "Delete an event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        4272,
+        1152
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "c1eb0f65db8cf813047300a0bf07bbe56274a6fb1c114431846870368a4514f7@group.calendar.google.com",
+          "cachedResultName": "Reminders"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "9df9ebb9-0aee-477e-bea0-a750b6d0b2fc",
+      "name": "Get an event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        4400,
+        1152
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=You are a task management assistant. Your responsibilities include creating, retrieving, updating, and deleting tasks in the user's Google Tasks list.\n\nGoogle Tasks Management Tools\n\nUse \"Create Task\" to add a new task to the user's task list.\nUse \"Get Tasks\" to retrieve tasks from a specific list or all lists.\nUse \"Update Task\" to modify an existing task. You must use \"Get Tasks\" first to obtain the task ID.\nUse \"Delete Task\" to remove a task. You must use \"Get Tasks\" first to obtain the task ID.\nUse \"Create Task List\" to organize tasks into a new list.\nUse \"Get Task Lists\" to retrieve available task lists.\nUse \"Delete Task List\" to remove an entire task list. You must use \"Get Task Lists\" first to obtain the list ID.\n\nFinal Notes\nHere is the current date/time: {{ $now }}\nIf a due date or time is not specified for a task, assume it is due by end of day.\nTasks should be created with clear titles and optional descriptions for context.\nUse priority flags if specified (e.g., high, medium, low)."
+        }
+      },
+      "id": "a3720a45-001b-4cb5-849f-3ca3e1d9609b",
+      "name": "Task agent",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        4576,
+        1136
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "task": "MDE5MTI4ODM0MjI0MDM1MTAyNDQ6MDow",
+        "title": "={{ $fromAI('Title', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "id": "9f2f7750-8ef1-46d9-886d-1754450eff54",
+      "name": "Create a task in Google Tasks",
+      "type": "n8n-nodes-base.googleTasksTool",
+      "position": [
+        4624,
+        1328
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "task": "MDE5MTI4ODM0MjI0MDM1MTAyNDQ6MDow",
+        "taskId": "={{ $fromAI('Task_ID', ``, 'string') }}"
+      },
+      "id": "3f6975c4-6012-4b22-a237-230279ae80b7",
+      "name": "Delete a task in Google Tasks",
+      "type": "n8n-nodes-base.googleTasksTool",
+      "position": [
+        4784,
+        1328
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "task": "MDE5MTI4ODM0MjI0MDM1MTAyNDQ6MDow",
+        "additionalFields": {
+          "dueMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Due_Min', ``, 'string') }}",
+          "dueMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Due_Max', ``, 'string') }}"
+        }
+      },
+      "id": "dc7c2501-d1d8-4bc6-bc52-dbf099ca2750",
+      "name": "Get many tasks in Google Tasks",
+      "type": "n8n-nodes-base.googleTasksTool",
+      "position": [
+        4944,
+        1328
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://n8n.iniyavan.space/webhook/92db4287-145c-4ae7-9931-ab57b4ecbe67",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "user message:",
+              "value": "={{ $('WhatsApp Trigger1').item.json.messages[0].text.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d65cead4-b6a8-44a1-a5d4-8d11a992a856",
+      "name": "image creation",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "position": [
+        3920,
+        688
+      ],
+      "typeVersion": 4.2,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e138847e-d6d0-44d1-ae3d-ec135c8a6235",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        4704,
+        688
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize the following exchange in 1 human-readable sentence.\nNote the conversation may in tamil,engilsh or Both (Thunglish). User is male and it always one-to-one convo.\nUSER:{{ $('Webhook3').item.json.body['user message:'] }}\nASSISTANT: {{ $('AI Agent2').item.json.output }}\n\nWrite a warm, human-style summary.\nIf the message is trivial or small talk, just return: nothing.\n\n",
+        "batching": {}
+      },
+      "id": "a69281b9-81e4-4d56-be59-57ac0f8e66dc",
+      "name": "Summarize Chat",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        4272,
+        464
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "=",
+        "recipientPhoneNumber": "=",
+        "messageType": "image",
+        "mediaPath": "useMedian8n",
+        "additionalFields": {}
+      },
+      "id": "3f2b3ba3-cf4f-4ae5-8cc6-c88fca60466a",
+      "name": "Send message",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        3984,
+        464
+      ],
+      "webhookId": "4c5b3e09-2439-4411-9126-84710396b63e",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "whatsapp"
+      },
+      "id": "b0652b81-908c-49fc-a0d5-7f50c300454d",
+      "name": "Simple Memory2",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        3552,
+        720
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        -48
+      ],
+      "id": "25ccc064-5380-492e-8c5f-fcb6148ae14d",
+      "name": "Postgres PGVector Store2"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "lallalala",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        3600,
+        864
+      ],
+      "id": "c769a4b1-a485-4d29-be2a-d8edc22b9c9e",
+      "name": "Postgres PGVector Store3",
+      "credentials": {
+        "postgres": {
+          "id": "r1sDdlozhFXXfYyd",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        4656,
+        464
+      ],
+      "id": "3ea7c9df-8ce2-4ff6-a43e-082ff6ebc57a",
+      "name": "Postgres PGVector Store4",
+      "credentials": {
+        "postgres": {
+          "id": "r1sDdlozhFXXfYyd",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.finalPrompt }}\n\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are [Company]’s support assistant for Black Ball Sporting Club.\n• Do NOT include any preamble such as “Based on the document you provided” or “Okay, [Name].” Just jump straight to the answer.\n* don't ever start your response with\"based on the document you provided\" , or \"According to the document\", don't mention any documents at all , also don't mention today's date unless you asked\n"
+        }
+      },
+      "id": "73f15a05-ebe2-43a5-9b5c-7e909f5aafc9",
+      "name": "AI Agent4",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "maxTries": 5,
+      "position": [
+        2768,
+        464
+      ],
+      "retryOnFail": false,
+      "typeVersion": 1.7,
+      "alwaysOutputData": true,
+      "waitBetweenTries": null
+    },
+    {
+      "parameters": {
+        "instructions": "Write code to:\n• Get today’s date formatted “Month Day, Year”\n• Extract the Google Doc’s plain text by joining its body.content textRuns\n• Extract the WhatsApp message from messages[0].text.body\n• Build a field finalPrompt exactly as:\n\nvbnet\nCopy\nEdit\nToday's date is: [date]\n\n[doc text]\n\nUser's question:\n[body]\n• Return finalPrompt only.",
+        "codeGeneratedForPrompt": "Write code to:\n• Get today’s date formatted “Month Day, Year”\n• Extract the Google Doc’s plain text by joining its body.content textRuns\n• Extract the WhatsApp message from messages[0].text.body\n• Build a field finalPrompt exactly as:\n\nvbnet\nCopy\nEdit\nToday's date is: [date]\n\n[doc text]\n\nUser's question:\n[body]\n• Return finalPrompt only.",
+        "jsCode": "const googleDocs = $input.all().map((item) => item.json);\nconst whatsappMessages = $(\"when message received\")\n  .all()\n  .map((item) => item.json);\n\nconst date = new Date();\nconst formattedDate = `${date.getMonth() + 1} ${date.getDate()}, ${date.getFullYear()}`;\n\nconst docText = googleDocs[0].content.split(\"\\n\").join(\" \");\n\nconst body = whatsappMessages[0].messages[0].text.body;\n\nconst finalPrompt = `Today's date is: ${formattedDate}\\n\\n${docText}\\n\\nUser's question:\\n${body}`;\n\nreturn { finalPrompt };\n"
+      },
+      "id": "72b982e2-7a86-4bb4-9c31-b6ab517e6ecd",
+      "name": "Prepare Prompt1",
+      "type": "n8n-nodes-base.aiTransform",
+      "position": [
+        2496,
+        464
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "=1Uv1WYCcXNlp-jaeJ7-3MNxWYfPj-wcYnJv4_colXSvk"
+      },
+      "id": "6b25193f-c54c-42eb-999c-22c452a87c06",
+      "name": "company's knowledge1",
+      "type": "n8n-nodes-base.googleDocs",
+      "position": [
+        2208,
+        272
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('when message received').item.json.contacts[0].wa_id }}"
+      },
+      "id": "0f48b84d-d70c-4e58-9d7c-35a3b0c9b44c",
+      "name": "Simple Memory5",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        2848,
+        688
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "instructions": "Write code to:\n• Get today’s date formatted “Month Day, Year”\n• Extract the Google Doc’s plain text by joining its body.content textRuns\n• Extract the WhatsApp message from messages[0].text.body\n• Build a field finalPrompt exactly as:\n\nvbnet\nCopy\nEdit\nToday's date is: [date]\n\n[doc text]\n\nUser's question:\n[body]\n• Return finalPrompt only.",
+        "codeGeneratedForPrompt": "Write code to:\n• Get today’s date formatted “Month Day, Year”\n• Extract the Google Doc’s plain text by joining its body.content textRuns\n• Extract the WhatsApp message from messages[0].text.body\n• Build a field finalPrompt exactly as:\n\nvbnet\nCopy\nEdit\nToday's date is: [date]\n\n[doc text]\n\nUser's question:\n[body]\n• Return finalPrompt only.",
+        "jsCode": "const googleDocs = $input.all().map((item) => item.json);\nconst whatsappMessages = $(\"when message received\")\n  .all()\n  .map((item) => item.json);\n\nconst date = new Date();\nconst formattedDate = `${date.getMonth() + 1} ${date.getDate()}, ${date.getFullYear()}`;\n\nconst docText = googleDocs[0].content.split(\"\\n\").join(\" \");\n\nconst body = whatsappMessages[0].messages[0].text.body;\n\nconst finalPrompt = `Today's date is: ${formattedDate}\\n\\n${docText}\\n\\nUser's question:\\n${body}`;\n\nreturn { finalPrompt };\n"
+      },
+      "id": "91b186ee-ea8a-425d-abe1-993a20bb350e",
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.aiTransform",
+      "position": [
+        1200,
+        1472
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        720
+      ],
+      "id": "0d473143-d2d4-4a11-83d9-7221ce9331df",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        4272,
+        656
+      ],
+      "id": "b0dc4f2d-be44-43ae-8575-10cce7676d3e",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        3696,
+        1232
+      ],
+      "id": "9b18327c-138d-4fa7-a6bf-0a5a3a9345ee",
+      "name": "Ollama Chat Model2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        3568,
+        1232
+      ],
+      "id": "a22a9aab-e3e9-4ba3-b40b-bb7d1cc974de",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        1024
+      ],
+      "id": "5a622855-b200-4f57-b6d8-9830b7a7e4e1",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2704,
+        688
+      ],
+      "id": "8257dabd-1c6e-42e2-90ab-35d683199344",
+      "name": "Ollama Chat Model3",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        672
+      ],
+      "id": "552112b7-1230-43fb-a86a-2b9369c8178c",
+      "name": "Ollama Chat Model4",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        192
+      ],
+      "id": "c8afc89b-f528-47f5-84b8-c8ee5a01da81",
+      "name": "Embeddings Ollama2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "29fcda07-03be-4de9-951b-9fbcbf6e3f50",
+      "name": "Carregar Bases",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -800,
+        -48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        4576,
+        688
+      ],
+      "id": "f55f9174-5a92-4e11-90f5-e26ab46a31a4",
+      "name": "Embeddings Ollama4",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        4448,
+        1344
+      ],
+      "id": "697b2f22-adc1-4a57-a487-3aa5c9d5854b",
+      "name": "Ollama Chat Model6",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=You are a task management assistant. Your responsibilities include creating, retrieving, updating, and deleting tasks in the user's Google Tasks list.\n\nGoogle Tasks Management Tools\n\nUse \"Create Task\" to add a new task to the user's task list.\nUse \"Get Tasks\" to retrieve tasks from a specific list or all lists.\nUse \"Update Task\" to modify an existing task. You must use \"Get Tasks\" first to obtain the task ID.\nUse \"Delete Task\" to remove a task. You must use \"Get Tasks\" first to obtain the task ID.\nUse \"Create Task List\" to organize tasks into a new list.\nUse \"Get Task Lists\" to retrieve available task lists.\nUse \"Delete Task List\" to remove an entire task list. You must use \"Get Task Lists\" first to obtain the list ID.\n\nFinal Notes\nHere is the current date/time: {{ $now }}\nIf a due date or time is not specified for a task, assume it is due by end of day.\nTasks should be created with clear titles and optional descriptions for context.\nUse priority flags if specified (e.g., high, medium, low)."
+        }
+      },
+      "id": "83d2573d-6a3c-4f64-ad5f-b848f12fca12",
+      "name": "Task agent1",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        2928,
+        912
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        1136
+      ],
+      "id": "3f53b6c5-192d-4848-b3b1-ab3737e1fc99",
+      "name": "Ollama Chat Model7",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dWQGyjLtBuMJavTC",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        3104,
+        1152
+      ],
+      "id": "2b42182d-0a7b-46b0-a3e0-d1da10e89385",
+      "name": "Create a document in Google Docs"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3024,
+        688
+      ],
+      "id": "88a67de2-b87f-4008-90b3-20888ab6e820",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Map image prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map JSON": {
+      "main": [
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Types": {
+      "main": [
+        [
+          {
+            "node": "Map text prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gets WhatsApp Voicemail Source URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gets WhatsApp Image Source URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gets WhatsApp Document Source URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map text prompt": {
+      "main": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Chunker": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Section Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from PDF": {
+      "main": [
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XLS": {
+      "main": [
+        [
+          {
+            "node": "Map JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map image prompt": {
+      "main": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route Types",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Document": {
+      "main": [
+        [
+          {
+            "node": "Map file extensions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XLSX": {
+      "main": [
+        [
+          {
+            "node": "Map JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Voicemail": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map document prompt": {
+      "main": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map file extensions": {
+      "main": [
+        [
+          {
+            "node": "Route Document Types",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Docs Importer": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Document Types": {
+      "main": [
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map document prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XLS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Section Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gets WhatsApp Image Source URL": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gets WhatsApp Document Source URL": {
+      "main": [
+        [
+          {
+            "node": "Download Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gets WhatsApp Voicemail Source URL": {
+      "main": [
+        [
+          {
+            "node": "Download Voicemail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sistem Prompt": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table in Postgres": {
+      "ai_tool": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Typing....": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an event": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Summarize Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Chat": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "image creation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update an event": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store4",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a task in Google Tasks": {
+      "ai_tool": [
+        [
+          {
+            "node": "Task agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a task in Google Tasks": {
+      "ai_tool": [
+        [
+          {
+            "node": "Task agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many tasks in Google Tasks": {
+      "ai_tool": [
+        [
+          {
+            "node": "Task agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store4": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "company's knowledge1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory5": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Typing....",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarize Chat",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sistem Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carregar Bases": {
+      "main": [
+        [
+          {
+            "node": "Google Docs Importer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama4": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store4",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Task agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Task agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document in Google Docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Task agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task agent1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "82ac673f-bac5-4e78-ad54-3d1d6c1b80f6",
+  "meta": {
+    "instanceId": "a5f45c9faa533255bf0af76adb14d56d7310a187977f6694a6ea37a1221c90a5"
+  },
+  "id": "FzxhBj4OwX405GaV",
+  "tags": []
+}
