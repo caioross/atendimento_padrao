@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"       # API do Ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0   # Para aceitar conexões de outras redes/docker containers :contentReference[oaicite:0]{index=0}
+    volumes:
+      - ollama_data:/root/.ollama   # persiste modelos/configurações :contentReference[oaicite:1]{index=1}
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    depends_on:
+      - ollama
+    ports:
+      - "3000:8080"           # porta da interface web do WebUI :contentReference[oaicite:2]{index=2}
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434  # indica para o WebUI onde está o Ollama :contentReference[oaicite:3]{index=3}
+      # pode colocar variáveis adicionais como segredos etc.
+    volumes:
+      - webui_data:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  webui_data:
