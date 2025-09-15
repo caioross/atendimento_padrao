@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  evolution:
+    image: atendai/evolution-api:latest
+    container_name: evolution_whatsapp
+    restart: always
+    ports:
+      - "21465:21465"   # Porta da API Evolution
+    environment:
+      - SERVER_PORT=21465
+      - LOG_LEVEL=info
+      - DOCKER_ENV=true
+    volumes:
+      - evolution_data:/evolution/store
+
+volumes:
+  evolution_data:
