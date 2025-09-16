@@ -1,26 +1,23 @@
+# docker-compose.yml
 networks:
-  atendimento-net:
-    name: atendimento-net
+  n8n-clarify-net:
+    name: n8n-clarify-net
     driver: bridge
 
 volumes:
   n8n-data:
   ollama-data:
-  whisper-models:
   pgdata:
-  tts-cache:
   evolution_store:
   evolution_instances:
   evolution-audio: 
-  redis-data:
-
 
 services:
-  atendimento-core:
+  n8n-clarify-core:
     image: n8nio/n8n
-    container_name: atendimento-n8n
+    container_name: n8n-Clarify-n8n
     ports: ["5678:5678"]
-    networks: [atendimento-net]
+    networks: [n8n-clarify-net]
     volumes:
       - n8n-data:/home/node/.n8n
       - ./tmp/news:/tmp/news
@@ -38,9 +35,9 @@ services:
 
   llm-ollama:
     image: ollama/ollama
-    container_name: atendimento-Ollama
+    container_name: n8n-Clarify-Ollama
     ports: ["11434:11434"]
-    networks: [atendimento-net]
+    networks: [n8n-clarify-net]
     volumes:
       - ollama-data:/models
       - ollama-data:/root/.ollama
@@ -53,54 +50,11 @@ services:
       retries: 3
       start_period: 10s
 
-
-  whisper:
-    build: ./build/whisper
-    container_name: atendimento-STT
-    ports: ["9000:9000"]
-    networks: [atendimento-net]
-    volumes:
-      - whisper-models:/models
-    env_file: .env
-    environment:
-      WHISPER_MODEL: large-v3
-      WHISPER_LANGUAGE: pt
-      WHISPER_DEVICE: cpu
-      WHISPER_COMPUTE_TYPE: int8 
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-
-  tts:
-    build: ./build/tts
-    container_name: atendimento-TTS
-    ports: ["5000:5000"]
-    networks: [atendimento-net]
-    volumes:
-      - tts-cache:/root/.local/share/tts
-    env_file: .env
-    environment:
-      MODEL_NAME: tts_models/multilingual/multi-dataset/xtts_v2
-      USE_CUDA: "false"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-
   postgree:
     image: postgres:16
-    container_name: atendimento-DB
+    container_name: n8n-Clarify-DB
     ports: ["5432:5432"]
-    networks: [atendimento-net]
+    networks: [n8n-clarify-net]
     volumes:
       - pgdata:/var/lib/postgresql/data
     env_file: .env
@@ -112,46 +66,28 @@ services:
       retries: 5
 
   evolution-api:
-    image: atendai/evolution-api
-    container_name: atendimento-EvolutionAPI
+    image: atendai/evolution-api:latest
+    container_name: n8n-Clarify-EvolutionAPI
     ports:
       - "8085:8080"
-    networks:
-      - atendimento-net
+    networks: [n8n-clarify-net]
     volumes:
       - evolution-audio:/app/audios
       - evolution_store:/evolution/store
       - evolution_instances:/evolution/instances
+    env_file: .env
     environment:
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1023204200
       - LICENSE_KEY=${EVOLUTION_LICENSE_KEY}
+      - AUTHENTICATION_API_KEY=${AUTHENTICATION_API_KEY}
       - INTERFACE=all
       - WEBHOOK_URL_EVO=${WEBHOOK_URL_EVO}
-
       - DATABASE_ENABLED=true
       - DATABASE_PROVIDER=postgresql
       - DATABASE_CONNECTION_URI=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgree:5432/${POSTGRES_DB}?schema=public
-      - DATABASE_CONNECTION_CLIENT_NAME=atendimentoEvolutionClient
-
-      - CACHE_REDIS_ENABLED=true
-      - CACHE_REDIS_URI=redis://redis:6379/0
-      - CACHE_REDIS_PREFIX_KEY=evolution
-      - CACHE_LOCAL_ENABLED=false
-
+      - DATABASE_CONNECTION_CLIENT_NAME=n8nClarifyEvolutionClient
+      - CACHE_REDIS_ENABLED=false
+      - CACHE_LOCAL_ENABLED=true
+    depends_on:
+      - postgree
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-  redis:
-      image: redis:7
-      container_name: atendimento-redis
-      networks:
-        - atendimento-net
-      ports:
-        - '6379:6379'
-      volumes:
-        - redis-data:/data
-
